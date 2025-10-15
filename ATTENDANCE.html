@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>University Attendance System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #0078D7;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .container {
+      width: 90%;
+      max-width: 1000px;
+      margin: 25px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #0078D7;
+      border-bottom: 2px solid #0078D7;
+      padding-bottom: 5px;
+    }
+    select, button, input {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin: 5px 0;
+    }
+    button {
+      background: #0078D7;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #0078D7;
+      color: white;
+    }
+    .present {
+      background: #28a745;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .absent {
+      background: #dc3545;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .section {
+      margin-bottom: 25px;
+    }
+    .add-section {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .stats {
+      margin-top: 15px;
+      padding: 10px;
+      background: #eef6ff;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Department of Computer Science – Semester 7<br>Attendance Management System</header>
+
+  <div class="container">
+
+    <!-- Add new student -->
+    <div class="section">
+      <h2>Add New Student</h2>
+      <div class="add-section">
+        <input type="text" id="newStudentName" placeholder="Student Full Name">
+        <button onclick="addStudent()">Add Student</button>
+      </div>
+    </div>
+
+    <!-- Add new course -->
+    <div class="section">
+      <h2>Add New Course</h2>
+      <div class="add-section">
+        <input type="text" id="newCourseName" placeholder="Course Name">
+        <button onclick="addCourse()">Add Course</button>
+      </div>
+    </div>
+
+    <!-- Select course for attendance -->
+    <div class="section">
+      <h2>Take Attendance</h2>
+      <label for="courseSelect">Select Course:</label>
+      <select id="courseSelect"></select>
+      <button onclick="loadAttendanceTable()">Load Students</button>
+
+      <table id="attendanceTable">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <button onclick="saveAttendance()">Save Attendance</button>
+
+      <div class="stats" id="stats"></div>
+    </div>
+
+    <!-- Attendance Records -->
+    <div class="section">
+      <h2>Attendance Records</h2>
+      <table id="recordTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Day</th>
+            <th>Course</th>
+            <th>Student</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    // Load data from local storage or initialize
+    let students = JSON.parse(localStorage.getItem("students")) || [
+      "Khadro Liibaan Jamac",
+      "Sumayo Ciise Cabdikariin",
+      "Roodo Cabdi Maxamed",
+      "Fahima Mohamed Cabdi"
+    ];
+    let courses = JSON.parse(localStorage.getItem("courses")) || [
+      "Cybersecurity",
+      "Islamic",
+      "Mobile Application",
+      "Linux",
+      "IP Routing & Switch",
+      "Research"
+    ];
+    let attendanceRecords = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
+
+    const courseSelect = document.getElementById("courseSelect");
+    const attendanceTable = document.getElementById("attendanceTable").querySelector("tbody");
+    const recordTable = document.getElementById("recordTable").querySelector("tbody");
+    const stats = document.getElementById("stats");
+
+    function saveToLocal() {
+      localStorage.setItem("students", JSON.stringify(students));
+      localStorage.setItem("courses", JSON.stringify(courses));
+      localStorage.setItem("attendanceRecords", JSON.stringify(attendanceRecords));
+    }
+
+    // Load courses in dropdown
+    function loadCourses() {
+      courseSelect.innerHTML = "";
+      courses.forEach(course => {
+        const option = document.createElement("option");
+        option.value = course;
+        option.textContent = course;
+        courseSelect.appendChild(option);
+      });
+    }
+
+    // Load attendance table
+    function loadAttendanceTable() {
+      attendanceTable.innerHTML = "";
+      students.forEach(name => {
+        const row = attendanceTable.insertRow();
+        row.insertCell(0).textContent = name;
+
+        const statusCell = row.insertCell(1);
+        const select = document.createElement("select");
+        select.innerHTML = `
+          <option value="">Select</option>
+          <option value="Present">Present</option>
+          <option value="Absent">Absent</option>
+        `;
+        statusCell.appendChild(select);
+      });
+    }
+
+    // Add new student
+    function addStudent() {
+      const name = document.getElementById("newStudentName").value.trim();
+      if (name === "") return alert("Please enter student name");
+      students.push(name);
+      document.getElementById("newStudentName").value = "";
+      saveToLocal();
+      alert("Student added successfully!");
+    }
+
+    // Add new course
+    function addCourse() {
+      const course = document.getElementById("newCourseName").value.trim();
+      if (course === "") return alert("Please enter course name");
+      courses.push(course);
+      loadCourses();
+      saveToLocal();
+      document.getElementById("newCourseName").value = "";
+      alert("Course added successfully!");
+    }
+
+    // Save attendance with date
+    function saveAttendance() {
+      const selectedCourse = courseSelect.value;
+      if (!selectedCourse) return alert("Please select a course!");
+
+      const date = new Date();
+      const today = date.toLocaleDateString();
+      const day = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+      const rows = attendanceTable.querySelectorAll("tr");
+      let presentCount = 0, absentCount = 0;
+
+      rows.forEach(row => {
+        const student = row.cells[0].textContent;
+        const status = row.cells[1].querySelector("select").value;
+        if (status) {
+          attendanceRecords.push({ date: today, day, course: selectedCourse, student, status });
+          if (status === "Present") presentCount++;
+          else absentCount++;
+        }
+      });
+
+      saveToLocal();
+      alert("Attendance saved successfully!");
+      showRecords();
+
+      // Show stats
+      stats.innerHTML = `
+        <strong>Statistics:</strong> 
+        Present: ${presentCount} | Absent: ${absentCount}
+      `;
+    }
+
+    // Display records
+    function showRecords() {
+      recordTable.innerHTML = "";
+      attendanceRecords.forEach(rec => {
+        const row = recordTable.insertRow();
+        row.insertCell(0).textContent = rec.date;
+        row.insertCell(1).textContent = rec.day;
+        row.insertCell(2).textContent = rec.course;
+        row.insertCell(3).textContent = rec.student;
+        row.insertCell(4).innerHTML = rec.status === "Present"
+          ? `<span class='present'>Present</span>`
+          : `<span class='absent'>Absent</span>`;
+      });
+    }
+
+    // Initialize
+    loadCourses();
+    showRecords();
+  </script>
+</body>
+</html> 
